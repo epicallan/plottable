@@ -7304,7 +7304,7 @@ var Plottable;
                 var _this = this;
                 this._renderArea.select(".label-area").remove();
                 if (this._labelsEnabled) {
-                    Plottable.Utils.Window.setTimeout(function () { return _this._drawLabels(); }, time);
+                    // Utils.Window.setTimeout(() => this._drawLabels(), time);
                     Plottable.Utils.Window.setTimeout(function () { return _this._drawOutLabels(); }, time); // custom change
                 }
                 var drawSteps = this._generateStrokeDrawSteps();
@@ -7354,24 +7354,18 @@ var Plottable;
                     }
                     value = _this._labelFormatter(value);
                     var measurement = measurer.measure(value);
-                    console.log('startAngle', _this._startAngles[datumIndex]);
-                    console.log('endAngle', _this._endAngles[datumIndex]);
                     var theta = (_this._endAngles[datumIndex] + _this._startAngles[datumIndex]) / 2;
-                    console.log('theta', theta);
                     var outerRadius = _this.outerRadius().accessor(datum, datumIndex, dataset);
                     if (_this.outerRadius().scale) {
                         outerRadius = _this.outerRadius().scale.scale(outerRadius);
                     }
-                    console.log('outerRadius', outerRadius);
                     var innerRadius = _this.innerRadius().accessor(datum, datumIndex, dataset);
                     if (_this.innerRadius().scale) {
                         innerRadius = _this.innerRadius().scale.scale(innerRadius);
                     }
-                    console.log('innerRadius', innerRadius);
                     var labelRadius = (outerRadius + innerRadius) / 2;
-                    console.log('labelRadius', labelRadius);
-                    var x = Math.sin(theta) * labelRadius + 5 - measurement.width / 2;
-                    var y = -Math.cos(theta) * labelRadius + 5 - measurement.height / 2;
+                    var x = Math.sin(theta) * outerRadius + 5;
+                    var y = -Math.cos(theta) * outerRadius + 5;
                     var corners = [
                         { x: x, y: y },
                         { x: x, y: y + measurement.height },

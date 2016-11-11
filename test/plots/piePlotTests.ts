@@ -167,7 +167,7 @@ describe("Plots", () => {
 
     });
 
-    describe("Labels", () => {
+    describe.skip("Labels", () => {
       let svg: d3.Selection<void>;
       let piePlot: Plottable.Plots.Pie;
 

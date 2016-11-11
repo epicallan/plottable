@@ -320,7 +320,7 @@ namespace Plottable.Plots {
     protected _additionalPaint(time: number) {
       this._renderArea.select(".label-area").remove();
       if (this._labelsEnabled) {
-        Utils.Window.setTimeout(() => this._drawLabels(), time);
+        // Utils.Window.setTimeout(() => this._drawLabels(), time);
         Utils.Window.setTimeout(() => this._drawOutLabels(), time); // custom change
       }
 
@@ -358,6 +358,7 @@ namespace Plottable.Plots {
       }
       return null;
     }
+
     private _drawOutLabels() {
       let attrToProjector = this._generateAttrToProjector();
       let labelArea = this._renderArea.append("g").classed("out-label-area", true);
@@ -373,29 +374,22 @@ namespace Plottable.Plots {
         value = this._labelFormatter(value);
         let measurement = measurer.measure(value);
 
-        console.log('startAngle', this._startAngles[datumIndex]);
-        console.log('endAngle', this._endAngles[datumIndex]);
         let theta = (this._endAngles[datumIndex] + this._startAngles[datumIndex]) / 2;
-        console.log('theta', theta);
 
         let outerRadius = this.outerRadius().accessor(datum, datumIndex, dataset);
         if (this.outerRadius().scale) {
           outerRadius = this.outerRadius().scale.scale(outerRadius);
         }
-        console.log('outerRadius', outerRadius);
 
         let innerRadius = this.innerRadius().accessor(datum, datumIndex, dataset);
         if (this.innerRadius().scale) {
           innerRadius = this.innerRadius().scale.scale(innerRadius);
         }
-        console.log('innerRadius', innerRadius);
-
 
         let labelRadius = (outerRadius + innerRadius) / 2;
-        console.log('labelRadius', labelRadius);
 
-        let x = Math.sin(theta) * labelRadius + 5 - measurement.width / 2;
-        let y = -Math.cos(theta) * labelRadius + 5 - measurement.height / 2;
+        let x = Math.sin(theta) * outerRadius + 5;
+        let y = -Math.cos(theta) *  outerRadius + 5
 
         let corners = [
           { x: x, y: y },
@@ -428,6 +422,7 @@ namespace Plottable.Plots {
         });
       });
     }
+
     private _drawLabels() {
       let attrToProjector = this._generateAttrToProjector();
       let labelArea = this._renderArea.append("g").classed("label-area", true);
