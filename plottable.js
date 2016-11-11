@@ -7305,6 +7305,7 @@ var Plottable;
                 this._renderArea.select(".label-area").remove();
                 if (this._labelsEnabled) {
                     Plottable.Utils.Window.setTimeout(function () { return _this._drawLabels(); }, time);
+                    Plottable.Utils.Window.setTimeout(function () { return _this._drawOutLabels(); }, time); // custom change
                 }
                 var drawSteps = this._generateStrokeDrawSteps();
                 var dataToDraw = this._getDataToDraw();
@@ -7337,6 +7338,67 @@ var Plottable;
                     }
                 }
                 return null;
+            };
+            Pie.prototype._drawOutLabels = function () {
+                var _this = this;
+                var attrToProjector = this._generateAttrToProjector();
+                var labelArea = this._renderArea.append("g").classed("out-label-area", true);
+                var measurer = new SVGTypewriter.Measurers.Measurer(labelArea);
+                var writer = new SVGTypewriter.Writers.Writer(measurer);
+                var dataset = this.datasets()[0];
+                var data = this._getDataToDraw().get(dataset);
+                data.forEach(function (datum, datumIndex) {
+                    var value = _this.sectorValue().accessor(datum, datumIndex, dataset);
+                    if (!Plottable.Utils.Math.isValidNumber(value)) {
+                        return;
+                    }
+                    value = _this._labelFormatter(value);
+                    var measurement = measurer.measure(value);
+                    console.log('startAngle', _this._startAngles[datumIndex]);
+                    console.log('endAngle', _this._endAngles[datumIndex]);
+                    var theta = (_this._endAngles[datumIndex] + _this._startAngles[datumIndex]) / 2;
+                    console.log('theta', theta);
+                    var outerRadius = _this.outerRadius().accessor(datum, datumIndex, dataset);
+                    if (_this.outerRadius().scale) {
+                        outerRadius = _this.outerRadius().scale.scale(outerRadius);
+                    }
+                    console.log('outerRadius', outerRadius);
+                    var innerRadius = _this.innerRadius().accessor(datum, datumIndex, dataset);
+                    if (_this.innerRadius().scale) {
+                        innerRadius = _this.innerRadius().scale.scale(innerRadius);
+                    }
+                    console.log('innerRadius', innerRadius);
+                    var labelRadius = (outerRadius + innerRadius) / 2;
+                    console.log('labelRadius', labelRadius);
+                    var x = Math.sin(theta) * labelRadius + 5 - measurement.width / 2;
+                    var y = -Math.cos(theta) * labelRadius + 5 - measurement.height / 2;
+                    var corners = [
+                        { x: x, y: y },
+                        { x: x, y: y + measurement.height },
+                        { x: x + measurement.width, y: y },
+                        { x: x + measurement.width, y: y + measurement.height },
+                    ];
+                    // let showLabel = corners.every((corner) => {
+                    //   return Math.abs(corner.x) <= this.width() / 2 && Math.abs(corner.y) <= this.height() / 2;
+                    // });
+                    //
+                    // if (showLabel) {
+                    //   let sliceIndices = corners.map((corner) => this._sliceIndexForPoint(corner));
+                    //   showLabel = sliceIndices.every((index) => index === datumIndex);
+                    // }
+                    var color = attrToProjector["fill"](datum, datumIndex, dataset);
+                    var dark = Plottable.Utils.Color.contrast("white", color) * 1.6 < Plottable.Utils.Color.contrast("black", color);
+                    var g = labelArea.append("g").attr("transform", "translate(" + x + "," + y + ")");
+                    var className = dark ? "dark-label" : "light-label";
+                    g.classed(className, true);
+                    g.style("visibility", true ? "inherit" : "hidden");
+                    writer.write(value, measurement.width, measurement.height, {
+                        selection: g,
+                        xAlign: "center",
+                        yAlign: "center",
+                        textRotation: 0,
+                    });
+                });
             };
             Pie.prototype._drawLabels = function () {
                 var _this = this;

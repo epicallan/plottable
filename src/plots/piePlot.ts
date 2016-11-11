@@ -321,6 +321,7 @@ namespace Plottable.Plots {
       this._renderArea.select(".label-area").remove();
       if (this._labelsEnabled) {
         Utils.Window.setTimeout(() => this._drawLabels(), time);
+        Utils.Window.setTimeout(() => this._drawOutLabels(), time); // custom change
       }
 
       let drawSteps = this._generateStrokeDrawSteps();
@@ -357,7 +358,76 @@ namespace Plottable.Plots {
       }
       return null;
     }
+    private _drawOutLabels() {
+      let attrToProjector = this._generateAttrToProjector();
+      let labelArea = this._renderArea.append("g").classed("out-label-area", true);
+      let measurer = new SVGTypewriter.Measurers.Measurer(labelArea);
+      let writer = new SVGTypewriter.Writers.Writer(measurer);
+      let dataset = this.datasets()[0];
+      let data = this._getDataToDraw().get(dataset);
+      data.forEach((datum, datumIndex) => {
+        let value = this.sectorValue().accessor(datum, datumIndex, dataset);
+        if (!Plottable.Utils.Math.isValidNumber(value)) {
+          return;
+        }
+        value = this._labelFormatter(value);
+        let measurement = measurer.measure(value);
 
+        console.log('startAngle', this._startAngles[datumIndex]);
+        console.log('endAngle', this._endAngles[datumIndex]);
+        let theta = (this._endAngles[datumIndex] + this._startAngles[datumIndex]) / 2;
+        console.log('theta', theta);
+
+        let outerRadius = this.outerRadius().accessor(datum, datumIndex, dataset);
+        if (this.outerRadius().scale) {
+          outerRadius = this.outerRadius().scale.scale(outerRadius);
+        }
+        console.log('outerRadius', outerRadius);
+
+        let innerRadius = this.innerRadius().accessor(datum, datumIndex, dataset);
+        if (this.innerRadius().scale) {
+          innerRadius = this.innerRadius().scale.scale(innerRadius);
+        }
+        console.log('innerRadius', innerRadius);
+
+
+        let labelRadius = (outerRadius + innerRadius) / 2;
+        console.log('labelRadius', labelRadius);
+
+        let x = Math.sin(theta) * labelRadius + 5 - measurement.width / 2;
+        let y = -Math.cos(theta) * labelRadius + 5 - measurement.height / 2;
+
+        let corners = [
+          { x: x, y: y },
+          { x: x, y: y + measurement.height},
+          { x: x + measurement.width, y: y },
+          { x: x + measurement.width, y: y + measurement.height },
+        ];
+
+        // let showLabel = corners.every((corner) => {
+        //   return Math.abs(corner.x) <= this.width() / 2 && Math.abs(corner.y) <= this.height() / 2;
+        // });
+        //
+        // if (showLabel) {
+        //   let sliceIndices = corners.map((corner) => this._sliceIndexForPoint(corner));
+        //   showLabel = sliceIndices.every((index) => index === datumIndex);
+        // }
+
+        let color = attrToProjector["fill"](datum, datumIndex, dataset);
+        let dark = Utils.Color.contrast("white", color) * 1.6 < Utils.Color.contrast("black", color);
+        let g = labelArea.append("g").attr("transform", "translate(" + x + "," + y + ")");
+        let className = dark ? "dark-label" : "light-label";
+        g.classed(className, true);
+        g.style("visibility", true ? "inherit" : "hidden");
+
+        writer.write(value, measurement.width, measurement.height, {
+          selection: g,
+          xAlign: "center",
+          yAlign: "center",
+          textRotation: 0,
+        });
+      });
+    }
     private _drawLabels() {
       let attrToProjector = this._generateAttrToProjector();
       let labelArea = this._renderArea.append("g").classed("label-area", true);

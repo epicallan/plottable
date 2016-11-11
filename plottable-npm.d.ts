@@ -3026,6 +3026,7 @@ declare namespace Plottable.Plots {
         protected _additionalPaint(time: number): void;
         private _generateStrokeDrawSteps();
         private _sliceIndexForPoint(p);
+        private _drawOutLabels();
         private _drawLabels();
     }
 }
